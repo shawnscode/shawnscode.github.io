@@ -306,14 +306,92 @@
   </entry>
   
   <entry>
+    <title>Serialization in Unity</title>
+    <link href="http://markindev.github.io/2015/12/23/Serialization-in-Unity/"/>
+    <id>http://markindev.github.io/2015/12/23/Serialization-in-Unity/</id>
+    <published>2015-12-23T03:08:26.000Z</published>
+    <updated>2016-02-16T15:14:02.000Z</updated>
+    
+    <content type="html">&lt;p&gt;序列化（Serialization）在Unity当中，作为核心机制驱动了相当多的功能。比如当我们&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;储存脚本中配置的参数时，实际上是在序列化脚本当中的特定字段；&lt;/li&gt;
+&lt;li&gt;创建Prefab时，实际上是在序列化特定Game Objects和它们的Components所组成的对象；&lt;/li&gt;
+&lt;li&gt;调用Instantiation时，无论是使用Prefab或者是GameObject或者是任意UnityObject作为参数。在Unity内部都会首先将它序列化，再创建一个新的对象，并在这个新的对象上进行反序列化用于初始状态。注意序列化结果会包含内部（Internal）数据和外部（External）数据，内部对象会被完整重建，而外部对象（比如纹理等）只会保留一个Reference。&lt;/li&gt;
+&lt;li&gt;调用Resource.GarbageCollectSharedAssets()来清理未被引用的资源时，Unity通过序列化整个场景节点，来计算所有对外部UnityEngine.Object的引用次数。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;p&gt;在实际开发当中，序列化有Binary和Text两种模式，前者内存结构更为紧密，运行时效率更高。后者便于阅读调试，能较好地适配于各类版本管理软件。我们可以通过在Edit/Project Settting/Editor中设置Asset Serialization Mode为Foce Text，来观察以Yaml格式序列化后产生的.asset/.unity文本数据文件。&lt;/p&gt;
+&lt;p&gt;序列化系统在Unity引擎内部以C++实现，并被使用在所有Unity内部对象当中（Textures, AnimationClip, Camera等等）。由于序列化的广泛使用，以及对性能的较高需求，所以Unity对于需要序列化的对象有一套特殊的约束机制。一个类型，只有在满足如下任一条件时，才可以被正确地序列化使用：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;非Abstract且带有[System.Serializable]属性标签的自定义Class；&lt;/li&gt;
+&lt;li&gt;带有[System.Serializable]标签的自定义Struct（在Unity4.5版本引入）；&lt;/li&gt;
+&lt;li&gt;任一继承至UnityEngine.Object的对象；&lt;/li&gt;
+&lt;li&gt;Primitive数据类型（int, float, double, bool, string等）；&lt;/li&gt;
+&lt;li&gt;符合1、2、3、4任一条件类型的Array；&lt;/li&gt;
+&lt;li&gt;符合1、2、3、4任一条件类型的List&lt;t&gt;；&lt;/t&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;除了上面的约束条件外，针对自定义Class额外还有数条限制，下面我们逐一进行讨论。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;首先，对于自定义Class，不支持引用。&lt;/strong&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;[Serializable]&amp;#10;class Animal&amp;#10;&amp;#123;&amp;#10;    public string name;&amp;#10;&amp;#125;&amp;#10; &amp;#10;class MyScript : MonoBehaviour&amp;#10;&amp;#123;&amp;#10;    public Animal[] animals;&amp;#10;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;观察上面这段代码，如果我们往animals中插入Animal A的引用三次。当Unity反序列化完成后，我们会得到三个独立的对象B，C，D。Class表现出了类似于Struct的行为。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;其次，对于自定义Class，不支持Null。&lt;/strong&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;class Test : MonoBehaviour&amp;#10;&amp;#123;&amp;#10;    public Trouble t;&amp;#10;&amp;#125;&amp;#10; &amp;#10;[Serializable]&amp;#10;class Trouble&amp;#10;&amp;#123;&amp;#10;    public Trouble t1;&amp;#10;    public Trouble t2;&amp;#10;    public Trouble t3;&amp;#10;&amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;类似于上面的代码，在序列化Test的过程中会呈现出非常诡异的行为。由于不支持自定义Class的Null值，我们可能会猜测，无论Test.t的赋值情况，它将会产生两次Allocations，一次为Test，一次为Trouble。实际上，上面这段代码会产生729次Allocations。因为Unity会循环的创建并初始化Trouble中t1、t2、t3，它之所以没有造成内存溢出、崩溃，只是因为Unity至多递归序列化7层对象。&lt;/p&gt;
+&lt;p&gt;Unity在最近的版本里，直接禁止了序列化诸如Trouble这类含有自引用的对象。但我们依然能够很轻松的通过构造循环引用，如Trouble1-&amp;gt;Trouble2-&amp;gt;Trouble1的形式，来产生死循环。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;最后，对于自定义Class，不支持多态Polymorphism。&lt;/strong&gt;&lt;/p&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;gutter&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;1&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;public Animal[] animals&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;p&gt;如果我们分别有Dog、Cat和Giraffe三个分别继承自Animals的对象，并分别创建插入animals中。当Unity反序列化完成后，我们会得到三个Animals。只有基类Animal中的数据被正确有效的序列化了。&lt;/p&gt;
+&lt;p&gt;根据Unity Blog中做出的解释，之所以会存在上面的限制，是因为Unity序列化系统的实现基于一个重要的假设：序列化对象的数据布局能够在编译时确定。这些限制导致我们没法直接依赖Unity本身的序列化，来构造复杂的自定义数据结构（比如图等可能会产生引用以及循环引用的地方）。虽然有不少人对这套系统提出了&lt;a href=&quot;https://feedback.unity3d.com/suggestions/serialization-of-polymorphic-dat&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;修改建议&lt;/a&gt;，但根据目前官方的回复以及Roadmap来看，似乎并没有在短期内修改这些设定的打算。&lt;/p&gt;
+&lt;p&gt;如果我们想要序列化一个Unity并不支持的自定义数据时，那么我们应该怎么办呢？官方给出的workaround是通过继承ISerializationCallbackRecevier来在序列化之前（OnBeforeSerialize）以及反序列化之后（OnAfterDeserialize）将我们的数据构造成合适的结构（比如将一个Dictionary&lt;k, v=&quot;&quot;&gt;构造为List&lt;k&gt;加List&lt;v&gt;的形式）。使用这个办法，通过一些巧妙的数据变换、构造技巧，勉强可以作到：&lt;/v&gt;&lt;/k&gt;&lt;/k,&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;支持自定义对象的引用；&lt;/li&gt;
+&lt;li&gt;支持自定义对象的Null值；&lt;/li&gt;
+&lt;li&gt;支持Dictionary等数据结构；&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;但是这个手段，除了让代码变得晦涩难读外，还依然无法满足自定义对象的多态需求。因为不管如何进行数据的构造，多态对象始终会违背我们在上面所提到的假设。&lt;/p&gt;
+&lt;p&gt;如果一定要执著于使用自定义类型来进行序列化，唯一的方法就是由我们自己在C#层独立实现一套序列化机制，这样不仅可以避免规避上述限制，而且也不需要对代码结构做出特殊的处理。最常见的序列化工具有诸如C#自带的System.Runtime.Serialization或者Protobuf .Net等等。具体到选择哪一套工具，往往需要考虑下面的这些需求：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;能够平稳的运行在目标平台，由于iOS禁止JIT，所以需要能够支持纯AOT模式；&lt;/li&gt;
+&lt;li&gt;能够支持Version Tolerance。这里面有Backward Compatible和Forward Compatible两种情形，当我们对某个类型增加字段时，前者保证新的序列化数据不会导致老版本程序崩溃，后者保证新版程序不会因为解析旧序列化数据崩溃；&lt;/li&gt;
+&lt;li&gt;能够在运行时拥有较好地时间、空间性能；&lt;/li&gt;
+&lt;li&gt;能够恰当的处理循环引用（Circle Reference）；&lt;/li&gt;
+&lt;li&gt;能够支持Json, Csv等Text格式，保证Svn、Git等版本管理工具可以正常的进行Merge等操作；&lt;/li&gt;
+&lt;li&gt;等等。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;我们在实际工作当中，发现C#的BinarySerializer会有Version Tolerance问题，对于类型字段名字的修改，就可以造成序列化抛出异常。而Protobuf .Net除了库体较大外，使用了大量的代码生成技术（JIT）进行效率优化，导致其在iOS上面会出现运行时异常（AOT-ONLY），需要手动进行一些代码处理。最后找到了一个较为合适的开源库Full Serializer，如果有相关需求的同学可以参考一下。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;序列化（Serialization）在Unity当中，作为核心机制驱动了相当多的功能。比如当我们&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;储存脚本中配置的参数时，实际上是在序列化脚本当中的特定字段；&lt;/li&gt;
+&lt;li&gt;创建Prefab时，实际上是在序列化特定Game Objects和它们的Components所组成的对象；&lt;/li&gt;
+&lt;li&gt;调用Instantiation时，无论是使用Prefab或者是GameObject或者是任意UnityObject作为参数。在Unity内部都会首先将它序列化，再创建一个新的对象，并在这个新的对象上进行反序列化用于初始状态。注意序列化结果会包含内部（Internal）数据和外部（External）数据，内部对象会被完整重建，而外部对象（比如纹理等）只会保留一个Reference。&lt;/li&gt;
+&lt;li&gt;调用Resource.GarbageCollectSharedAssets()来清理未被引用的资源时，Unity通过序列化整个场景节点，来计算所有对外部UnityEngine.Object的引用次数。&lt;/li&gt;
+&lt;/ol&gt;
+    
+    </summary>
+    
+      <category term="Unity" scheme="http://markindev.github.io/categories/Unity/"/>
+    
+    
+      <category term="serialization" scheme="http://markindev.github.io/tags/serialization/"/>
+    
+      <category term="unity" scheme="http://markindev.github.io/tags/unity/"/>
+    
+  </entry>
+  
+  <entry>
     <title>《玩乐之道》读书笔记</title>
     <link href="http://markindev.github.io/2015/08/16/notes-on-rules-of-play/"/>
     <id>http://markindev.github.io/2015/08/16/notes-on-rules-of-play/</id>
     <published>2015-08-16T14:55:44.000Z</published>
-    <updated>2016-02-16T15:04:56.000Z</updated>
+    <updated>2016-02-16T15:13:49.000Z</updated>
     
     <content type="html">&lt;p&gt;&lt;strong&gt;阅读Rules of Play后做了些许&lt;a href=&quot;http://markindev.github.io/2015/08/16/Notes-on-Rules-of-Play/&quot;&gt;笔记&lt;/a&gt;，以我的理解过程为顺序记录在这里。&lt;/strong&gt;&lt;/p&gt;
 &lt;h2 id=&quot;C7-定义游戏&quot;&gt;&lt;a href=&quot;#C7-定义游戏&quot; class=&quot;headerlink&quot; title=&quot;C7 定义游戏&quot;&gt;&lt;/a&gt;C7 定义游戏&lt;/h2&gt;&lt;p&gt;游戏是一个系统，玩家参与到系统中的一次认为的冲突里面，该冲突由规则限定，迫使玩家为了达成游戏的目标而作出选择，玩家的选择作用在系统规则中，产生一个可计量的结果。&lt;/p&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
 &lt;h2 id=&quot;C8-电子游戏的一些特性&quot;&gt;&lt;a href=&quot;#C8-电子游戏的一些特性&quot; class=&quot;headerlink&quot; title=&quot;C8 电子游戏的一些特性&quot;&gt;&lt;/a&gt;C8 电子游戏的一些特性&lt;/h2&gt;&lt;p&gt;电子游戏的特质可以用四点来总结：&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;交互是即时却又狭窄的；&lt;/li&gt;
@@ -321,7 +399,6 @@
 &lt;li&gt;自动化负责系统；&lt;/li&gt;
 &lt;li&gt;联网式交流。&lt;/li&gt;
 &lt;/ol&gt;
-&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
 &lt;h2 id=&quot;C5-系统&quot;&gt;&lt;a href=&quot;#C5-系统&quot; class=&quot;headerlink&quot; title=&quot;C5 系统&quot;&gt;&lt;/a&gt;C5 系统&lt;/h2&gt;&lt;p&gt;一个系统是一组相互关联的组件共同构成一个复杂的整体。你可以用很多种不同的方式去把游戏框定成系统，例如数学系统、社会系统、代表性系统等等。&lt;br&gt;所有的系统都具有四种元素：&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;对象：是系统内的组件、元素或者变量；&lt;/li&gt;
@@ -384,13 +461,6 @@
     
       &lt;p&gt;&lt;strong&gt;阅读Rules of Play后做了些许&lt;a href=&quot;http://markindev.github.io/2015/08/16/Notes-on-Rules-of-Play/&quot;&gt;笔记&lt;/a&gt;，以我的理解过程为顺序记录在这里。&lt;/strong&gt;&lt;/p&gt;
 &lt;h2 id=&quot;C7-定义游戏&quot;&gt;&lt;a href=&quot;#C7-定义游戏&quot; class=&quot;headerlink&quot; title=&quot;C7 定义游戏&quot;&gt;&lt;/a&gt;C7 定义游戏&lt;/h2&gt;&lt;p&gt;游戏是一个系统，玩家参与到系统中的一次认为的冲突里面，该冲突由规则限定，迫使玩家为了达成游戏的目标而作出选择，玩家的选择作用在系统规则中，产生一个可计量的结果。&lt;/p&gt;
-&lt;h2 id=&quot;C8-电子游戏的一些特性&quot;&gt;&lt;a href=&quot;#C8-电子游戏的一些特性&quot; class=&quot;headerlink&quot; title=&quot;C8 电子游戏的一些特性&quot;&gt;&lt;/a&gt;C8 电子游戏的一些特性&lt;/h2&gt;&lt;p&gt;电子游戏的特质可以用四点来总结：&lt;/p&gt;
-&lt;ol&gt;
-&lt;li&gt;交互是即时却又狭窄的；&lt;/li&gt;
-&lt;li&gt;信息操纵（设计着可以控制玩家对游戏规则等信息的接触量）；&lt;/li&gt;
-&lt;li&gt;自动化负责系统；&lt;/li&gt;
-&lt;li&gt;联网式交流。&lt;/li&gt;
-&lt;/ol&gt;
     
     </summary>
     

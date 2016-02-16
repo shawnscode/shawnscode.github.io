@@ -1,0 +1,56 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> Serialization in Unity · Markin HOME</title><meta name="description" content="Serialization in Unity - Jingkai Mao"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="short icon" href="/favicon.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="stylesheet" href="http://fonts.useso.com/css?family=Source+Sans+Pro:400,600" type="text/css"></head><body><header><a href="/" class="logo-link"><img src="/favicon.png"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="https://github.com/markindev" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="/atom.xml" target="_self" class="nav-list-link">RSS</a></li></ul></header><section class="container"><div class="post"><article class="post-block"><h1 class="post-title">Serialization in Unity</h1><div class="post-time">Dec 23, 2015</div><div class="post-content"><p>序列化（Serialization）在Unity当中，作为核心机制驱动了相当多的功能。比如当我们</p>
+<ol>
+<li>储存脚本中配置的参数时，实际上是在序列化脚本当中的特定字段；</li>
+<li>创建Prefab时，实际上是在序列化特定Game Objects和它们的Components所组成的对象；</li>
+<li>调用Instantiation时，无论是使用Prefab或者是GameObject或者是任意UnityObject作为参数。在Unity内部都会首先将它序列化，再创建一个新的对象，并在这个新的对象上进行反序列化用于初始状态。注意序列化结果会包含内部（Internal）数据和外部（External）数据，内部对象会被完整重建，而外部对象（比如纹理等）只会保留一个Reference。</li>
+<li>调用Resource.GarbageCollectSharedAssets()来清理未被引用的资源时，Unity通过序列化整个场景节点，来计算所有对外部UnityEngine.Object的引用次数。</li>
+</ol>
+<a id="more"></a>
+<p>在实际开发当中，序列化有Binary和Text两种模式，前者内存结构更为紧密，运行时效率更高。后者便于阅读调试，能较好地适配于各类版本管理软件。我们可以通过在Edit/Project Settting/Editor中设置Asset Serialization Mode为Foce Text，来观察以Yaml格式序列化后产生的.asset/.unity文本数据文件。</p>
+<p>序列化系统在Unity引擎内部以C++实现，并被使用在所有Unity内部对象当中（Textures, AnimationClip, Camera等等）。由于序列化的广泛使用，以及对性能的较高需求，所以Unity对于需要序列化的对象有一套特殊的约束机制。一个类型，只有在满足如下任一条件时，才可以被正确地序列化使用：</p>
+<ol>
+<li>非Abstract且带有[System.Serializable]属性标签的自定义Class；</li>
+<li>带有[System.Serializable]标签的自定义Struct（在Unity4.5版本引入）；</li>
+<li>任一继承至UnityEngine.Object的对象；</li>
+<li>Primitive数据类型（int, float, double, bool, string等）；</li>
+<li>符合1、2、3、4任一条件类型的Array；</li>
+<li>符合1、2、3、4任一条件类型的List<t>；</t></li>
+</ol>
+<p>除了上面的约束条件外，针对自定义Class额外还有数条限制，下面我们逐一进行讨论。</p>
+<p><strong>首先，对于自定义Class，不支持引用。</strong></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[Serializable]&#10;class Animal&#10;&#123;&#10;    public string name;&#10;&#125;&#10; &#10;class MyScript : MonoBehaviour&#10;&#123;&#10;    public Animal[] animals;&#10;&#125;</span><br></pre></td></tr></table></figure>
+<p>观察上面这段代码，如果我们往animals中插入Animal A的引用三次。当Unity反序列化完成后，我们会得到三个独立的对象B，C，D。Class表现出了类似于Struct的行为。</p>
+<p><strong>其次，对于自定义Class，不支持Null。</strong></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">class Test : MonoBehaviour&#10;&#123;&#10;    public Trouble t;&#10;&#125;&#10; &#10;[Serializable]&#10;class Trouble&#10;&#123;&#10;    public Trouble t1;&#10;    public Trouble t2;&#10;    public Trouble t3;&#10;&#125;</span><br></pre></td></tr></table></figure>
+<p>类似于上面的代码，在序列化Test的过程中会呈现出非常诡异的行为。由于不支持自定义Class的Null值，我们可能会猜测，无论Test.t的赋值情况，它将会产生两次Allocations，一次为Test，一次为Trouble。实际上，上面这段代码会产生729次Allocations。因为Unity会循环的创建并初始化Trouble中t1、t2、t3，它之所以没有造成内存溢出、崩溃，只是因为Unity至多递归序列化7层对象。</p>
+<p>Unity在最近的版本里，直接禁止了序列化诸如Trouble这类含有自引用的对象。但我们依然能够很轻松的通过构造循环引用，如Trouble1-&gt;Trouble2-&gt;Trouble1的形式，来产生死循环。</p>
+<p><strong>最后，对于自定义Class，不支持多态Polymorphism。</strong></p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">public Animal[] animals</span><br></pre></td></tr></table></figure>
+<p>如果我们分别有Dog、Cat和Giraffe三个分别继承自Animals的对象，并分别创建插入animals中。当Unity反序列化完成后，我们会得到三个Animals。只有基类Animal中的数据被正确有效的序列化了。</p>
+<p>根据Unity Blog中做出的解释，之所以会存在上面的限制，是因为Unity序列化系统的实现基于一个重要的假设：序列化对象的数据布局能够在编译时确定。这些限制导致我们没法直接依赖Unity本身的序列化，来构造复杂的自定义数据结构（比如图等可能会产生引用以及循环引用的地方）。虽然有不少人对这套系统提出了<a href="https://feedback.unity3d.com/suggestions/serialization-of-polymorphic-dat" target="_blank" rel="external">修改建议</a>，但根据目前官方的回复以及Roadmap来看，似乎并没有在短期内修改这些设定的打算。</p>
+<p>如果我们想要序列化一个Unity并不支持的自定义数据时，那么我们应该怎么办呢？官方给出的workaround是通过继承ISerializationCallbackRecevier来在序列化之前（OnBeforeSerialize）以及反序列化之后（OnAfterDeserialize）将我们的数据构造成合适的结构（比如将一个Dictionary<k, v="">构造为List<k>加List<v>的形式）。使用这个办法，通过一些巧妙的数据变换、构造技巧，勉强可以作到：</v></k></k,></p>
+<ol>
+<li>支持自定义对象的引用；</li>
+<li>支持自定义对象的Null值；</li>
+<li>支持Dictionary等数据结构；</li>
+</ol>
+<p>但是这个手段，除了让代码变得晦涩难读外，还依然无法满足自定义对象的多态需求。因为不管如何进行数据的构造，多态对象始终会违背我们在上面所提到的假设。</p>
+<p>如果一定要执著于使用自定义类型来进行序列化，唯一的方法就是由我们自己在C#层独立实现一套序列化机制，这样不仅可以避免规避上述限制，而且也不需要对代码结构做出特殊的处理。最常见的序列化工具有诸如C#自带的System.Runtime.Serialization或者Protobuf .Net等等。具体到选择哪一套工具，往往需要考虑下面的这些需求：</p>
+<ol>
+<li>能够平稳的运行在目标平台，由于iOS禁止JIT，所以需要能够支持纯AOT模式；</li>
+<li>能够支持Version Tolerance。这里面有Backward Compatible和Forward Compatible两种情形，当我们对某个类型增加字段时，前者保证新的序列化数据不会导致老版本程序崩溃，后者保证新版程序不会因为解析旧序列化数据崩溃；</li>
+<li>能够在运行时拥有较好地时间、空间性能；</li>
+<li>能够恰当的处理循环引用（Circle Reference）；</li>
+<li>能够支持Json, Csv等Text格式，保证Svn、Git等版本管理工具可以正常的进行Merge等操作；</li>
+<li>等等。</li>
+</ol>
+<p>我们在实际工作当中，发现C#的BinarySerializer会有Version Tolerance问题，对于类型字段名字的修改，就可以造成序列化抛出异常。而Protobuf .Net除了库体较大外，使用了大量的代码生成技术（JIT）进行效率优化，导致其在iOS上面会出现运行时异常（AOT-ONLY），需要手动进行一些代码处理。最后找到了一个较为合适的开源库Full Serializer，如果有相关需求的同学可以参考一下。</p>
+</div></article></div></section><footer><div class="paginator"><a href="/2016/02/15/Rust-in-Details-Part-1/" class="prev">上一篇</a><a href="/2015/08/16/notes-on-rules-of-play/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'markindev';
+var disqus_identifier = '2015/12/23/Serialization-in-Unity/';
+var disqus_title = 'Serialization in Unity';
+var disqus_url = 'http://markindev.github.io/2015/12/23/Serialization-in-Unity/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//markindev.disqus.com/count.js" async></script><div class="copyright"><p>© 2015 - 2016 <a href="http://markindev.github.io">Jingkai Mao</a>, unless otherwise noted.</p></div></footer><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-65933410-1",'auto');ga('send','pageview');</script><script>var _hmt = _hmt || [];(function() {var hm = document.createElement("script");hm.src = "//hm.baidu.com/hm.js?a36e15d9e2adec9a21fcdd9f686b1ed2";var s = document.getElementsByTagName("script")[0]; s.parentNode.insertBefore(hm, s);})();</script><script src="https://cdn.bootcss.com/mathjax/2.5.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script></body></html>
