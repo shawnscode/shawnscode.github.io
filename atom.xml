@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://markindev.github.io/"/>
-  <updated>2016-02-16T14:33:33.000Z</updated>
+  <updated>2016-02-16T14:49:59.000Z</updated>
   <id>http://markindev.github.io/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://markindev.github.io/2016/02/15/Rust-in-Details-Part-1/"/>
     <id>http://markindev.github.io/2016/02/15/Rust-in-Details-Part-1/</id>
     <published>2016-02-15T11:58:04.000Z</published>
-    <updated>2016-02-16T14:33:33.000Z</updated>
+    <updated>2016-02-16T14:49:59.000Z</updated>
     
     <content type="html">&lt;p&gt;&lt;strong&gt;&lt;em&gt;&lt;a href=&quot;http://markindev.github.io/2016/02/15/Rust-in-Details-Part-1/&quot;&gt;此篇&lt;/a&gt;文章翻译自&lt;a href=&quot;http://nbaksalyar.github.io/2015/07/10/writing-chat-in-rust.html&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Rust-In-Details&lt;/a&gt;，已获得作者许可。转载或二次创作请保留本信息。&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;为了更好的了解如何使用Rust来解决一些实际问题，我们将在本系列文章中，逐步的尝试使用Rust来编写一个可扩展的、实时的聊天服务。&lt;/p&gt;
@@ -296,8 +296,110 @@
     
     </summary>
     
+      <category term="Rust" scheme="http://markindev.github.io/categories/Rust/"/>
+    
     
       <category term="rust" scheme="http://markindev.github.io/tags/rust/"/>
+    
+      <category term="websocket" scheme="http://markindev.github.io/tags/websocket/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《玩乐之道》读书笔记</title>
+    <link href="http://markindev.github.io/2015/08/16/notes-on-rules-of-play/"/>
+    <id>http://markindev.github.io/2015/08/16/notes-on-rules-of-play/</id>
+    <published>2015-08-16T14:55:44.000Z</published>
+    <updated>2016-02-16T15:04:56.000Z</updated>
+    
+    <content type="html">&lt;p&gt;&lt;strong&gt;阅读Rules of Play后做了些许&lt;a href=&quot;http://markindev.github.io/2015/08/16/Notes-on-Rules-of-Play/&quot;&gt;笔记&lt;/a&gt;，以我的理解过程为顺序记录在这里。&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id=&quot;C7-定义游戏&quot;&gt;&lt;a href=&quot;#C7-定义游戏&quot; class=&quot;headerlink&quot; title=&quot;C7 定义游戏&quot;&gt;&lt;/a&gt;C7 定义游戏&lt;/h2&gt;&lt;p&gt;游戏是一个系统，玩家参与到系统中的一次认为的冲突里面，该冲突由规则限定，迫使玩家为了达成游戏的目标而作出选择，玩家的选择作用在系统规则中，产生一个可计量的结果。&lt;/p&gt;
+&lt;h2 id=&quot;C8-电子游戏的一些特性&quot;&gt;&lt;a href=&quot;#C8-电子游戏的一些特性&quot; class=&quot;headerlink&quot; title=&quot;C8 电子游戏的一些特性&quot;&gt;&lt;/a&gt;C8 电子游戏的一些特性&lt;/h2&gt;&lt;p&gt;电子游戏的特质可以用四点来总结：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;交互是即时却又狭窄的；&lt;/li&gt;
+&lt;li&gt;信息操纵（设计着可以控制玩家对游戏规则等信息的接触量）；&lt;/li&gt;
+&lt;li&gt;自动化负责系统；&lt;/li&gt;
+&lt;li&gt;联网式交流。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;h2 id=&quot;C5-系统&quot;&gt;&lt;a href=&quot;#C5-系统&quot; class=&quot;headerlink&quot; title=&quot;C5 系统&quot;&gt;&lt;/a&gt;C5 系统&lt;/h2&gt;&lt;p&gt;一个系统是一组相互关联的组件共同构成一个复杂的整体。你可以用很多种不同的方式去把游戏框定成系统，例如数学系统、社会系统、代表性系统等等。&lt;br&gt;所有的系统都具有四种元素：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;对象：是系统内的组件、元素或者变量；&lt;/li&gt;
+&lt;li&gt;属性：是系统及其对象的特征和属性；&lt;/li&gt;
+&lt;li&gt;内部关系：各种对象间的关系；&lt;/li&gt;
+&lt;li&gt;环境：系统周围的上下文背景。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这些元素在任何一个游戏里面的辨别方法是取决于游戏的框定方式的。&lt;/p&gt;
+&lt;h2 id=&quot;C11-规则&quot;&gt;&lt;a href=&quot;#C11-规则&quot; class=&quot;headerlink&quot; title=&quot;C11 规则&quot;&gt;&lt;/a&gt;C11 规则&lt;/h2&gt;&lt;p&gt;规则构成了游戏的内部形式结构。所有的游戏都有规则，规则是定义出游戏的一种特征。游戏规则不同于礼法、法律、战争或者其他社交法则。游戏在本质上是人为的，是隔离于“现实世界”的背景的，而其他形式的规则是不隔离于日常生活的。以下是所有游戏规则都共有的通用特征：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;规则是明确清晰、固定不变的；&lt;/li&gt;
+&lt;li&gt;规则是有约束力用来限制玩家行为的；&lt;/li&gt;
+&lt;li&gt;规则是所有玩家共用的；&lt;/li&gt;
+&lt;li&gt;规则是可以重复使用的。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;设计规则的时候需要注意，规则存在两个层级：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;建构规则：是一个游戏抽象的核心数学规则，包含了基础的游戏逻辑，但不会明确的指出玩家是如何利用这些规则参与游戏的；&lt;/li&gt;
+&lt;li&gt;操作规则：是玩家在玩游戏时遵循的玩乐规则。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&quot;C6-交互（操作规则设计1）&quot;&gt;&lt;a href=&quot;#C6-交互（操作规则设计1）&quot; class=&quot;headerlink&quot; title=&quot;C6 交互（操作规则设计1）&quot;&gt;&lt;/a&gt;C6 交互（操作规则设计1）&lt;/h2&gt;&lt;p&gt;交互是和设计、系统，以及有意义玩乐的概念紧密联系起来的。当一名玩家与游戏里预先设计好的系统交互时，有意义的玩乐也随之诞生。&lt;/p&gt;
+&lt;p&gt;交互有很多种有效的定义，我们可以把这些定义归为交互的四种模式：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;认知交互，或者解释性参与；&lt;/li&gt;
+&lt;li&gt;功能交互，或者效用性参与；&lt;/li&gt;
+&lt;li&gt;明晰交互，或者擦与有目的的选择和过程；&lt;/li&gt;
+&lt;li&gt;对象以外的交互，或者是参与对象的文化内部。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;在理解交互的任何一个时刻时，这四种模式不是相互独立的分类，而是相互交叠的。它们在任何一个设计性系统的体验里往往是同时出现的。&lt;/p&gt;
+&lt;p&gt;并不是所有的交互都是预先设计好的交互。当一次交互是预先设计好时，它会具有一种内部结构和背景，以此为交互中的行为赋予意义。交互式背景会为参与者提供选择。选择可以是每时每刻交互行为的微观选择，也可以是关注于游戏体验的长期进展的宏观选择。&lt;/p&gt;
+&lt;p&gt;构成交互式意义的基本单位是“行为-&amp;gt;结果”单元。这些单元是交互设计师（包括有系设计师）用来创造更庞大的设计性交互结构的分子。在每次“行为-&amp;gt;结果”事件里有着五个阶段，这五个阶段构成了游戏里的一次选择。这些选择通过以下问题来表现：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;在玩家需要作出选择前发生的是什么情况？&lt;/li&gt;
+&lt;li&gt;游戏表现出多少种可能的选择给玩家？&lt;/li&gt;
+&lt;li&gt;玩家是如何作出选择的？&lt;/li&gt;
+&lt;li&gt;选择的结果是怎么样的？它是如何影响到将来的选择的？&lt;/li&gt;
+&lt;li&gt;选择的结果是如何表现给玩家的呢？&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;每一个阶段都同时表现了一个内部事件和外部事件。内部事件是游戏系统处理和接受选择，外部事件是把选择表现给玩家。一个游戏的可能性空间是在游戏过程中可能发生的所有行为和意义的空间。这个概念与意义、设计、系统和交互紧密的关联在一起。&lt;/p&gt;
+&lt;h2 id=&quot;C17-信息（操作规则设计2）&quot;&gt;&lt;a href=&quot;#C17-信息（操作规则设计2）&quot; class=&quot;headerlink&quot; title=&quot;C17 信息（操作规则设计2）&quot;&gt;&lt;/a&gt;C17 信息（操作规则设计2）&lt;/h2&gt;&lt;p&gt;游戏中的信息概念是指能够在游戏过程中被操纵、获得、隐藏和展示的知识和内容。游戏里面大致有下面四类信息：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;所有玩家了解的信息；&lt;/li&gt;
+&lt;li&gt;只有一个玩家了解的信息；&lt;/li&gt;
+&lt;li&gt;只有系统本身了解的信息；&lt;/li&gt;
+&lt;li&gt;随机产生的信息。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;一个系统里面的信息是没有内在价值的，它的价值是从它与系统的信息体制中其他信息单元的关系得到的。选择暴露什么样的信息或者多少信息给某一个特定的玩家，直接提供给玩家作出选择的上下文，驱动了玩家在游戏当中的行为。是一类非常重要的设计取舍。&lt;/p&gt;
+&lt;h2 id=&quot;C16-系统的复杂度（建构规则设计1）&quot;&gt;&lt;a href=&quot;#C16-系统的复杂度（建构规则设计1）&quot; class=&quot;headerlink&quot; title=&quot;C16 系统的复杂度（建构规则设计1）&quot;&gt;&lt;/a&gt;C16 系统的复杂度（建构规则设计1）&lt;/h2&gt;&lt;p&gt;在一个自发性系统里，系统中个还总对象的交互是相互关联且依赖于上下文背景的。互相关联的交互能影响到该系统的整体空间和模式，因为每种交互会互相联系，而这种联系又会继而影响到其他交互。依赖于上下文背景的交互会在每时每刻根据系统中其他部分当前正在发生的情况来发生改变，创造处随事件动态改变的模式。&lt;/p&gt;
+&lt;p&gt;这种模式导致了大部分游戏系统巨大的复杂性。所以游戏设计是一个二阶设计问题。游戏设计师能直接地设计游戏规则，但只能间接地设计玩家的体验。成功的设计是螺旋式的、基于整个游戏系统的不断改进。而基于系统去理解游戏是如何运作的，这能极大的提升游戏设计师的与预知能力。&lt;/p&gt;
+&lt;h2 id=&quot;C15-不确定性（建构规则设计2）&quot;&gt;&lt;a href=&quot;#C15-不确定性（建构规则设计2）&quot; class=&quot;headerlink&quot; title=&quot;C15 不确定性（建构规则设计2）&quot;&gt;&lt;/a&gt;C15 不确定性（建构规则设计2）&lt;/h2&gt;&lt;p&gt;不确定性是每个游戏里的关键元素。如果一个游戏是完全确定的，那玩家的行为对游戏的结果就没有任何影响了，因而也无法在游戏里促成有意义的玩乐。游戏中的不确定性一般来自于两个部分：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;系统本身的复杂度导致的结果的不可预测性；&lt;/li&gt;
+&lt;li&gt;概率性的随机机制。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;当设计一个有着概率元素的游戏时，关键在于理解概率的基础数学原理以及它们对你所设计的系统的影响程度。&lt;/p&gt;
+&lt;h2 id=&quot;C19、20博弈与冲突（建构规则设计3）&quot;&gt;&lt;a href=&quot;#C19、20博弈与冲突（建构规则设计3）&quot; class=&quot;headerlink&quot; title=&quot;C19、20博弈与冲突（建构规则设计3）&quot;&gt;&lt;/a&gt;C19、20博弈与冲突（建构规则设计3）&lt;/h2&gt;&lt;p&gt;理性的玩家会采用对自己有利的策略来在游戏的进行过程中选择，这里面就涉及到了玩家与玩家之间的博弈，玩家与系统本身的博弈。博弈的同时就会产生冲突，冲突是每个游戏内在的固有元素，它迫使玩家为了达成某种目标，作出有利于自己的选择（至少是玩家认为这样）。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;strong&gt;阅读Rules of Play后做了些许&lt;a href=&quot;http://markindev.github.io/2015/08/16/Notes-on-Rules-of-Play/&quot;&gt;笔记&lt;/a&gt;，以我的理解过程为顺序记录在这里。&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id=&quot;C7-定义游戏&quot;&gt;&lt;a href=&quot;#C7-定义游戏&quot; class=&quot;headerlink&quot; title=&quot;C7 定义游戏&quot;&gt;&lt;/a&gt;C7 定义游戏&lt;/h2&gt;&lt;p&gt;游戏是一个系统，玩家参与到系统中的一次认为的冲突里面，该冲突由规则限定，迫使玩家为了达成游戏的目标而作出选择，玩家的选择作用在系统规则中，产生一个可计量的结果。&lt;/p&gt;
+&lt;h2 id=&quot;C8-电子游戏的一些特性&quot;&gt;&lt;a href=&quot;#C8-电子游戏的一些特性&quot; class=&quot;headerlink&quot; title=&quot;C8 电子游戏的一些特性&quot;&gt;&lt;/a&gt;C8 电子游戏的一些特性&lt;/h2&gt;&lt;p&gt;电子游戏的特质可以用四点来总结：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;交互是即时却又狭窄的；&lt;/li&gt;
+&lt;li&gt;信息操纵（设计着可以控制玩家对游戏规则等信息的接触量）；&lt;/li&gt;
+&lt;li&gt;自动化负责系统；&lt;/li&gt;
+&lt;li&gt;联网式交流。&lt;/li&gt;
+&lt;/ol&gt;
+    
+    </summary>
+    
+      <category term="Designs" scheme="http://markindev.github.io/categories/Designs/"/>
+    
+    
+      <category term="designs" scheme="http://markindev.github.io/tags/designs/"/>
+    
+      <category term="notes" scheme="http://markindev.github.io/tags/notes/"/>
     
   </entry>
   
